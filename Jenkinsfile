@@ -2,17 +2,22 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven 3.8.5' // Make sure this matches the Maven name in Jenkins tool config
+        maven 'Maven_3' // Matches your configured Maven tool name
     }
 
     environment {
-        DEPLOY_DIR = "/var/lib/tomcat9/webapps" // Adjust if your Tomcat is in a different location
+        DEPLOY_DIR = "/var/lib/tomcat9/webapps"
+        NEXUS_URL = "http://44.202.160.205:8081/repository/maven-releases/"
+        NEXUS_CREDENTIALS_ID = "nexus" // Set this in Jenkins credentials
+        ARTIFACT_NAME = "NumberGuessGame"
+        VERSION = "1.0.0"
+        GROUP_ID = "com/example"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git 'https://github.com/Efosa234/NumberGuessGame.git'
+                git 'https://github.com/takenseyi/NumberGuessGame-17.git'
             }
         }
 
@@ -28,11 +33,24 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Upload to Nexus') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: "${NEXUS_CREDENTIALS_ID}", usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
+                    sh '''
+                    echo "Uploading artifact to Nexus..."
+                    curl -v -u $NEXUS_USER:$NEXUS_PASS \
+                    --upload-file target/${ARTIFACT_NAME}.war \
+                    ${NEXUS_URL}${GROUP_ID}/${ARTIFACT_NAME}/${VERSION}/${ARTIFACT_NAME}-${VERSION}.war
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy to Tomcat') {
             steps {
                 sh '''
                 echo "Deploying WAR file to Tomcat..."
-                cp target/*.war $DEPLOY_DIR/NumberGuessGame.war
+                cp target/${ARTIFACT_NAME}.war ${DEPLOY_DIR}/${ARTIFACT_NAME}.war
                 '''
             }
         }
@@ -40,10 +58,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Deployment successful!'
+            echo '✅ CI/CD pipeline completed successfully!'
         }
         failure {
-            echo '❌ Build or Deployment failed.'
+            echo '❌ Pipeline failed. Check logs for details.'
         }
     }
 }
