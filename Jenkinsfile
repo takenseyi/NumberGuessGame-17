@@ -16,12 +16,14 @@ pipeline {
         TOMCAT_SSH_CREDENTIALS = "ec2batekey"
         TOMCAT_HOST = "ec2-user@34.207.139.120"
         TOMCAT_DEPLOY_DIR = "~/apache-tomcat-7.0.94/webapps"
+        GIT_REPO = "https://github.com/takenseyi/NumberGuessGame-17.git"
+        GIT_CREDENTIALS_ID = "github-token"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'dev', url: 'https://github.com/takenseyi/NumberGuessGame-17.git'
+                git branch: 'dev', url: "${GIT_REPO}"
             }
         }
 
@@ -38,7 +40,7 @@ pipeline {
                         mvn sonar:sonar \\
                             -Dsonar.projectKey=NumberGuessGame \\
                             -Dsonar.projectName=NumberGuessGame \\
-                            -Dsonar.host.url=$SONAR_HOST_URL \\
+                            -Dsonar.host.url=${SONAR_HOST_URL} \\
                             -Dsonar.sources=src/main/java \\
                             -Dsonar.tests=src/test/java
                     """
@@ -85,12 +87,14 @@ pipeline {
 
         stage('Tag Git Version') {
             steps {
-                sh """
-                    git config user.name "jenkins"
-                    git config user.email "jenkins@local"
-                    git tag -a v${VERSION} -m "Deployed version ${VERSION}"
-                    git push origin v${VERSION}
-                """
+                withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS_ID}", usernameVariable: 'GIT_USER', passwordVariable: 'GIT_PASS')]) {
+                    sh """
+                        git config user.name "jenkins"
+                        git config user.email "jenkins@local"
+                        git tag -a v${VERSION} -m "Deployed version ${VERSION}"
+                        git push https://${GIT_USER}:${GIT_PASS}@github.com/takenseyi/NumberGuessGame-17.git v${VERSION}
+                    """
+                }
             }
         }
     }
