@@ -9,8 +9,8 @@ pipeline {
         NEXUS_URL = "http://3.93.23.105:8081/nexus/"
         NEXUS_CREDENTIALS_ID = "nexus"
         ARTIFACT_NAME = "NumberGuessGame"
-        VERSION = "1.0.0"
         GROUP_ID = "com.studentapp"
+        VERSION = "1.0.${BUILD_NUMBER}"
         SONARQUBE_SERVER = "My SonarQube Server"
         SONAR_HOST_URL = "http://44.211.82.116:9000"
         TOMCAT_SSH_CREDENTIALS = "ec2batekey"
@@ -27,7 +27,7 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                sh 'mvn clean verify'
+                sh "mvn clean verify -Dproject.version=${VERSION}"
             }
         }
 
@@ -59,7 +59,7 @@ pipeline {
                         -F v=${VERSION} \\
                         -F p=war \\
                         -F e=war \\
-                        -F file=@target/${ARTIFACT_NAME}-1.0-SNAPSHOT.war
+                        -F file=@target/${ARTIFACT_NAME}-${VERSION}.war
                     """
                 }
             }
@@ -69,13 +69,28 @@ pipeline {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "${TOMCAT_SSH_CREDENTIALS}", keyFileVariable: 'KEY')]) {
                     sh """
-                        echo "Deploying WAR file to remote Tomcat server via wget..."
+                        echo "Cleaning up old WAR files and deploying new version..."
                         ssh -o StrictHostKeyChecking=no -i $KEY ${TOMCAT_HOST} \\
-                        'wget --http-user=admin --http-password=admin123 \\
-                        "http://3.93.23.105:8081/nexus/content/repositories/releases/com/studentapp/NumberGuessGame/1.0.0/NumberGuessGame-1.0.0.war" \\
-                        -O ${TOMCAT_DEPLOY_DIR}/${ARTIFACT_NAME}.war'
+                        'rm -f ${TOMCAT_DEPLOY_DIR}/${ARTIFACT_NAME}*.war && \\
+                        wget --http-user=admin --http-password=admin123 \\
+                        "http://3.93.23.105:8081/nexus/content/repositories/releases/com/studentapp/${ARTIFACT_NAME}/${VERSION}/${ARTIFACT_NAME}-${VERSION}.war" \\
+                        -O ${TOMCAT_DEPLOY_DIR}/${ARTIFACT_NAME}-${VERSION}.war && \\
+                        ${TOMCAT_DEPLOY_DIR}/../bin/shutdown.sh && \\
+                        sleep 5 && \\
+                        ${TOMCAT_DEPLOY_DIR}/../bin/startup.sh'
                     """
                 }
+            }
+        }
+
+        stage('Tag Git Version') {
+            steps {
+                sh """
+                    git config user.name "jenkins"
+                    git config user.email "jenkins@local"
+                    git tag -a v${VERSION} -m "Deployed version ${VERSION}"
+                    git push origin v${VERSION}
+                """
             }
         }
     }
@@ -85,12 +100,10 @@ pipeline {
             junit '**/target/surefire-reports/*.xml'
         }
         success {
-            echo ':white_check_mark: CI/CD pipeline completed successfully!'
+            echo ":white_check_mark: Build ${VERSION} deployed and tagged successfully!"
         }
         failure {
-            echo ':x: Pipeline failed. Check logs for details.'
+            echo ":x: Build failed. Check logs for details."
         }
     }
 }
-
-
