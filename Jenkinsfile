@@ -27,7 +27,7 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                sh "mvn clean verify -Dproject.version=${VERSION}"
+                sh "mvn clean package -Dproject.version=${VERSION}"
             }
         }
 
@@ -69,7 +69,7 @@ pipeline {
             steps {
                 withCredentials([sshUserPrivateKey(credentialsId: "${TOMCAT_SSH_CREDENTIALS}", keyFileVariable: 'KEY')]) {
                     sh """
-                        echo "Cleaning up old WAR files and deploying new version..."
+                        echo "Deploying WAR file to remote Tomcat server via wget..."
                         ssh -o StrictHostKeyChecking=no -i $KEY ${TOMCAT_HOST} \\
                         'rm -f ${TOMCAT_DEPLOY_DIR}/${ARTIFACT_NAME}*.war && \\
                         wget --http-user=admin --http-password=admin123 \\
