@@ -6,15 +6,15 @@ pipeline {
     }
 
     environment {
-        NEXUS_URL = "http://44.201.144.123:8081/nexus/"
+        NEXUS_URL = "http://3.93.23.105:8081/nexus/"
         NEXUS_CREDENTIALS_ID = "nexus"
         ARTIFACT_NAME = "NumberGuessGame"
         VERSION = "1.0.0"
         GROUP_ID = "com.studentapp"
         SONARQUBE_SERVER = "My SonarQube Server"
-        SONAR_HOST_URL = "http://44.203.69.191:9000"
+        SONAR_HOST_URL = "http://44.211.82.116:9000"
         TOMCAT_SSH_CREDENTIALS = "ec2batekey"
-        TOMCAT_HOST = "ec2-user@13.221.37.192"
+        TOMCAT_HOST = "ec2-user@34.207.139.120"
         TOMCAT_DEPLOY_DIR = "~/apache-tomcat-7.0.94/webapps"
     }
 
@@ -72,7 +72,7 @@ pipeline {
                         echo "Deploying WAR file to remote Tomcat server via wget..."
                         ssh -o StrictHostKeyChecking=no -i $KEY ${TOMCAT_HOST} \\
                         'wget --http-user=admin --http-password=admin123 \\
-                        "http://44.201.144.123:8081/nexus/content/repositories/releases/com/studentapp/NumberGuessGame/1.0.0/NumberGuessGame-1.0.0.war" \\
+                        "http://3.93.23.105:8081/nexus/content/repositories/releases/com/studentapp/NumberGuessGame/1.0.0/NumberGuessGame-1.0.0.war" \\
                         -O ${TOMCAT_DEPLOY_DIR}/${ARTIFACT_NAME}.war'
                     """
                 }
@@ -92,4 +92,5 @@ pipeline {
         }
     }
 }
+
 
