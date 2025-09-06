@@ -74,4 +74,36 @@ pipeline {
                         'rm -f ${TOMCAT_DEPLOY_DIR}/${ARTIFACT_NAME}*.war && \\
                         wget --http-user=admin --http-password=admin123 \\
                         "http://3.93.23.105:8081/nexus/content/repositories/releases/com/studentapp/${ARTIFACT_NAME}/${VERSION}/${ARTIFACT_NAME}-${VERSION}.war" \\
-                        -O ${TOMCAT_DEPLOY_DIR}/${ARTIFACT_NAME}-${VERSION
+                        -O ${TOMCAT_DEPLOY_DIR}/${ARTIFACT_NAME}-${VERSION}.war && \\
+                        ${TOMCAT_DEPLOY_DIR}/../bin/shutdown.sh && \\
+                        sleep 5 && \\
+                        ${TOMCAT_DEPLOY_DIR}/../bin/startup.sh'
+                    """
+                }
+            }
+        }
+
+        stage('Tag Git Version') {
+            steps {
+                sh """
+                    git config user.name "jenkins"
+                    git config user.email "jenkins@local"
+                    git tag -a v${VERSION} -m "Deployed version ${VERSION}"
+                    git push origin v${VERSION}
+                """
+            }
+        }
+    }
+
+    post {
+        always {
+            junit '**/target/surefire-reports/*.xml'
+        }
+        success {
+            echo ":white_check_mark: Build ${VERSION} deployed and tagged successfully!"
+        }
+        failure {
+            echo ":x: Build failed. Check logs for details."
+        }
+    }
+}
