@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven_3'//maven
+        maven 'Maven_3' // Maven
     }
 
     environment {
@@ -102,6 +102,14 @@ pipeline {
     post {
         always {
             junit '**/target/surefire-reports/*.xml'
+            mail to: 'takenseyi@gmail.com',
+                 subject: "Jenkins Build Notification: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                 body: """\
+Build Status: ${currentBuild.currentResult}
+Project: ${env.JOB_NAME}
+Build Number: ${env.BUILD_NUMBER}
+Build URL: ${env.BUILD_URL}
+"""
         }
         success {
             echo ":white_check_mark: Build ${VERSION} deployed and tagged successfully!"
@@ -111,4 +119,3 @@ pipeline {
         }
     }
 }
-
