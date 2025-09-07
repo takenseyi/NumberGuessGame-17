@@ -6,15 +6,15 @@ pipeline {
     }
 
     environment {
-        NEXUS_URL = "http://3.93.23.105:8081/nexus/"
+        NEXUS_URL = "http://35.173.124.242:8081/nexus/"
         NEXUS_CREDENTIALS_ID = "nexus"
         ARTIFACT_NAME = "NumberGuessGame"
         GROUP_ID = "com.studentapp"
         VERSION = "1.0.${BUILD_NUMBER}"
         SONARQUBE_SERVER = "My SonarQube Server"
-        SONAR_HOST_URL = "http://44.211.82.116:9000"
+        SONAR_HOST_URL = "http://54.205.217.253:9000"
         TOMCAT_SSH_CREDENTIALS = "ec2batekey"
-        TOMCAT_HOST = "ec2-user@34.207.139.120"
+        TOMCAT_HOST = "ec2-user@35.173.219.9"
         TOMCAT_DEPLOY_DIR = "~/apache-tomcat-7.0.94/webapps"
         GIT_REPO = "https://github.com/takenseyi/NumberGuessGame-17.git"
         GIT_CREDENTIALS_ID = "github-token"
@@ -75,7 +75,7 @@ pipeline {
                         ssh -o StrictHostKeyChecking=no -i "$KEY" ${TOMCAT_HOST} \\
                         'rm -f ${TOMCAT_DEPLOY_DIR}/${ARTIFACT_NAME}*.war && \\
                         wget --http-user=admin --http-password=admin123 \\
-                        "http://3.93.23.105:8081/nexus/content/repositories/releases/com/studentapp/${ARTIFACT_NAME}/${VERSION}/${ARTIFACT_NAME}-${VERSION}.war" \\
+                        "http://35.173.124.242/nexus/content/repositories/releases/com/studentapp/${ARTIFACT_NAME}/${VERSION}/${ARTIFACT_NAME}-${VERSION}.war" \\
                         -O ${TOMCAT_DEPLOY_DIR}/${ARTIFACT_NAME}-${VERSION}.war && \\
                         ${TOMCAT_DEPLOY_DIR}/../bin/shutdown.sh && \\
                         sleep 5 && \\
@@ -111,3 +111,4 @@ pipeline {
         }
     }
 }
+
