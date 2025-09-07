@@ -75,7 +75,7 @@ pipeline {
                         ssh -o StrictHostKeyChecking=no -i "$KEY" ${TOMCAT_HOST} \\
                         'rm -f ${TOMCAT_DEPLOY_DIR}/${ARTIFACT_NAME}*.war && \\
                         wget --http-user=admin --http-password=admin123 \\
-                        "http://35.173.124.242/nexus/content/repositories/releases/com/studentapp/${ARTIFACT_NAME}/${VERSION}/${ARTIFACT_NAME}-${VERSION}.war" \\
+                        "http://35.173.124.242:8081/nexus/content/repositories/releases/com/studentapp/${ARTIFACT_NAME}/${VERSION}/${ARTIFACT_NAME}-${VERSION}.war" \\
                         -O ${TOMCAT_DEPLOY_DIR}/${ARTIFACT_NAME}-${VERSION}.war && \\
                         ${TOMCAT_DEPLOY_DIR}/../bin/shutdown.sh && \\
                         sleep 5 && \\
@@ -111,5 +111,3 @@ pipeline {
         }
     }
 }
-
-
